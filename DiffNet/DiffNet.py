@@ -1,24 +1,24 @@
 from torch.nn import Linear, Conv2d,ReLU
 import torch
 
-class DiffNetLayer(torch.nn.Module):
-    def __init__(self,k, layer_size = 32,in_channel = 1,out_channel=5,kernel_size=3):
-        super(DiffNetLayer, self).__init__()
-        padding = kernel_size//2
-        layers = [Conv2d(in_channel,layer_size,kernel_size,padding=padding)]
-        layers += [Conv2d(layer_size,layer_size,kernel_size,padding=padding) for i in range(k)]
-        layers += [Conv2d(layer_size,out_channel,kernel_size,padding=padding)]   
-        self.layers = torch.nn.ModuleList(layers)
-        self.relu = ReLU()
 
-    def forward(self,images):
-        output = images
-        for layer in self.layers[:-1]:
-            output = self.relu(layer(output))
-        output = self.layers[-1](output)
-        return output
-    
 class DiffNet(torch.nn.Module):
+    """
+    The DiffNet Class
+    A full DiffNet implementation for modelling diffusion problems
+
+    ...
+
+    Attributes
+    ----------
+    nlayers : int
+        number of diffusion layers in DiffNet
+    k : int
+        number of CNN layers in the approximator of diffusivity stencil
+    layer_size : int
+        number of channels in the hidden CNN layers of the diffusivity approximator
+    """
+
     def __init__(self,nlayers,k, layer_size = 32, dt = 0.1,kernel_size=3):
         super(DiffNet, self).__init__()
         self.diffnetlayers = torch.nn.ModuleList([DiffNetLayer(k,layer_size,kernel_size=kernel_size) for i in range(nlayers)])
@@ -42,3 +42,35 @@ class DiffNet(torch.nn.Module):
             x_update = torch.sum(x_gamma,dim=1).unsqueeze(1) + x_update
             
         return x_update
+
+        
+class DiffNetLayer(torch.nn.Module):
+    """
+    The DiffNetLayer Class. 
+    A single layer of the DiffNet diffusivity process, separated for abstraction and reusability 
+
+    ...
+
+    Attributes
+    ----------
+    k : int
+        number of CNN layers in the approximator of diffusivity stencil
+    layer_size : int
+        number of channels in the hidden CNN layers of the diffusivity approximator
+    """
+    
+    def __init__(self,k, layer_size = 32,in_channel = 1,out_channel=5,kernel_size=3):
+        super(DiffNetLayer, self).__init__()
+        padding = kernel_size//2
+        layers = [Conv2d(in_channel,layer_size,kernel_size,padding=padding)]
+        layers += [Conv2d(layer_size,layer_size,kernel_size,padding=padding) for i in range(k)]
+        layers += [Conv2d(layer_size,out_channel,kernel_size,padding=padding)]   
+        self.layers = torch.nn.ModuleList(layers)
+        self.relu = ReLU()
+
+    def forward(self,images):
+        output = images
+        for layer in self.layers[:-1]:
+            output = self.relu(layer(output))
+        output = self.layers[-1](output)
+        return output

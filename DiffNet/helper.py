@@ -6,6 +6,28 @@ from skimage.metrics import structural_similarity as ssim
 import copy
 
 def train_diffnet(model, trainset, validset, batch_size, lr, early_stopping = 20,verbose = False,max_epochs=2000):
+  """
+  The main training function for DiffNet and U-Net models.
+
+  Parameters
+  ----------
+      model : torch.nn.module
+          An instance of a DiffNet/GradientDiffNet/MultiScaleDiffNet/UNet object
+      trainset : TensorDataset
+          training set of a given forward/inverse flow problem
+      validset : TensorDataset
+          validation set of a given forward/inverse flow problem
+      batch_size : int
+          batch size for training
+      lr : float
+          learning rate for Adam optimizer
+      early_stopping : int
+          the number of epochs the training should continue for after it has observed the last improvement in validation loss, to ensure convergence
+      verbose : bool
+          set True to print loss at every epoch, otherwise it would print loss only after convergence
+      max_epochs: int
+          the maximum number of epochs to train for
+  """
   batch_size = 10
   trainLoader = DataLoader(trainset, batch_size=batch_size, shuffle = True)
   validLoader = DataLoader(validset, batch_size=5, shuffle = True)
@@ -85,6 +107,18 @@ def train_diffnet(model, trainset, validset, batch_size, lr, early_stopping = 20
 
 
 def display_examples(model, dataset, idxs,figsize = (12,12)):
+  """
+  A function to display its forward operation given some dataset.
+
+  Parameters
+  ----------
+      model : torch.nn.module
+          An instance of a trained DiffNet/GradientDiffNet/MultiScaleDiffNet/UNet object
+      dataset : TensorDataset
+          a dataset containing input and output images (ideally test or validation)
+      idxs : list
+          a list of integer indexes to sample from the dataset to display
+  """
   loader = DataLoader(dataset, batch_size=len(dataset))
   for data in loader: xs,ys = data
 

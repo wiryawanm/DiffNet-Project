@@ -4,39 +4,25 @@ import torch
 from torch.nn import Linear, Conv2d,ReLU
 import numpy as np
 
-
-class GradientGenerator:
-    def __init__(self,max_degree):
-        self.max_degree = max_degree
-        self.variables = self.generate_variables()
-        self.n_variables = len(self.variables)
-        
-    def generate(self,images):
-        images_grads = [images]
-        q = Queue()
-        q.put(images)
-
-        for degree in range(self.max_degree):
-            for i in range(q.qsize()):
-                g = q.get()
-                gx,gy = np.gradient(g,axis=(2,3))
-                q.put(gx)
-                images_grads.append(gx)
-            q.put(gy)
-            images_grads.append(gy)
-        return images_grads
-    
-    def generate_variables(self):
-        variables = ['g']
-        
-        for i in range(1,self.max_degree+1):
-            for j in range(i+1):
-                variables.append('g' + 'x'*(i-j)+'y'*j)
-        
-        return variables
-
-
 class GradientDiffNet(torch.nn.Module):
+    """
+    The Gradient DiffNet Class
+    A DiffNet implementation with image gradients incorporated for modelling diffusion problems
+
+    ...
+
+    Attributes
+    ----------
+    nlayers : int
+        number of diffusion layers in DiffNet
+    k : int
+        number of CNN layers in the approximator of diffusivity stencil
+    layer_size : int
+        number of channels in the hidden CNN layers of the diffusivity approximator
+    max_degree : int
+        the maximum order of image partial derivatives to be included in the network
+    """
+
     def __init__(self,nlayers,k, max_degree=2, layer_size = 32, dt = 0.1):
         super(GradientDiffNet, self).__init__()
         self.max_degree = max_degree
@@ -75,3 +61,47 @@ class GradientDiffNet(torch.nn.Module):
 
           x_update += summation
         return x_update
+
+        
+
+class GradientGenerator:
+    """
+    The Gradient Generator Class
+    A class which handles the generation of image spatial derivatives
+    ...
+
+    Attributes
+    ----------
+    max_degree : int
+        the maximum order of image partial derivatives to be included in the network
+    """
+    def __init__(self,max_degree):
+        self.max_degree = max_degree
+        self.variables = self.generate_variables()
+        self.n_variables = len(self.variables)
+        
+    def generate(self,images):
+        images_grads = [images]
+        q = Queue()
+        q.put(images)
+
+        for degree in range(self.max_degree):
+            for i in range(q.qsize()):
+                g = q.get()
+                gx,gy = np.gradient(g,axis=(2,3))
+                q.put(gx)
+                images_grads.append(gx)
+            q.put(gy)
+            images_grads.append(gy)
+        return images_grads
+    
+    def generate_variables(self):
+        variables = ['g']
+        
+        for i in range(1,self.max_degree+1):
+            for j in range(i+1):
+                variables.append('g' + 'x'*(i-j)+'y'*j)
+        
+        return variables
+
+

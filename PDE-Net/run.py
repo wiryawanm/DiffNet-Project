@@ -12,8 +12,12 @@ if __name__ == "__main__":
 
     dataset = load(data_path,diffusion)
 
+    # initialise SymNet and corresponding gradient generator. 
+    # gradient_generator.n_variables counts the correct input size for SymNet
     gradient_generator = GradientGenerator(3)
     symnet = LinearSymNet(in_size = gradient_generator.n_variables,k = 2)  
+
+    # Execute trianing function, returns a PDE_Net instance
     pdenet = train_PDE_NET(symnet=symnet, 
                 gradient_generator = gradient_generator,
                 blocks=4, 

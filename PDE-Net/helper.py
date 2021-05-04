@@ -8,6 +8,28 @@ from PDENet import PDE_NET
 
 
 def train_PDE_NET(symnet,gradient_generator, blocks, trainData, validData, batch_size, lr, max_epochs, early_stopping=10):
+    """
+    The main training function for DiffNet and U-Net models.
+
+    Parameters
+    ----------
+        symnet : LinearSymNet
+            An instance of a SymNet object
+        gradient_generator : GradientGenerator
+            A gradient generator object which determines the maximum order of partial derivative
+        trainData : TensorDataset
+            training data tensor of a given forward/inverse diffusion problem
+        validset : TensorDataset
+            validation data tensor of a given forward/inverse diffusion problem
+        batch_size : int
+            batch size for training
+        lr : float
+            learning rate for Adam optimizer
+        early_stopping : int
+            the number of epochs the training should continue for after it has observed the last improvement in validation loss, to ensure convergence
+        max_epochs: int
+            the maximum number of epochs to train for
+    """
     trainInputs = torch.Tensor(trainData[:,:,:,0])
     trainSteps = torch.Tensor(trainData[:,:,:,1:1+blocks])
     trainImagesDataset = TensorDataset(trainInputs,trainSteps)
@@ -62,6 +84,16 @@ def train_PDE_NET(symnet,gradient_generator, blocks, trainData, validData, batch
 
 
 class GradientGenerator:
+    """
+    The Gradient Generator Class
+    A class which handles the generation of image spatial derivatives
+    ...
+
+    Attributes
+    ----------
+    max_degree : int
+        the maximum order of image partial derivatives to be included in the network
+    """
     def __init__(self,max_degree):
         self.max_degree = max_degree
         self.variables = self.generate_variables()

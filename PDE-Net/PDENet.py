@@ -4,11 +4,26 @@ from torch.nn import Linear,Conv2d
 
 
 class PDE_NET(torch.nn.Module):
+    """
+    The PDE-Net Class
+    A simplified PDE-Net implementation with fixed gradient filters
+
+    ...
+
+    Attributes
+    ----------
+    blocks : int
+        number of blocks of SymNet, which should be the same as the number of time steps in the dataset
+    symnet : LinearSymNet/ConvSymNet
+        the SymNet object which will approximate PDE at every \delta t block of PDE-Net
+    gradient_generator : GradientGenerator
+        the GradientGenerator object which determines the maximum order of partial derivative to be included in the equation
+    """
+
     def __init__(self, blocks, symnet, gradient_generator):
         super(PDE_NET, self).__init__()
         self.blocks = blocks
         self.symnet = symnet     
-#         self.generate_grads = generate_grads
         self.gradient_generator = gradient_generator
         
     def forward(self,images):
@@ -21,6 +36,19 @@ class PDE_NET(torch.nn.Module):
         return torch.stack(images_preds,axis=-1)
     
 class LinearSymNet(torch.nn.Module):
+    """
+    The Linear SymNet Class
+    A SymNet implementation for approximating PDE at every time step of PDE-Net
+
+    ...
+
+    Attributes
+    ----------
+    in_size : int
+        the number of input variables of SymNet. e.g. for up to 2nd order partial derivatives, in_size should be 6 for {u,ux,uy,uxx,uxy,uxy}
+    k : int
+        the number of layers of SymNet, which determines the maximum number of multiplication performed in the PDE
+    """
     def __init__(self, in_size,k):
         super(LinearSymNet, self).__init__()
         self.k = k
@@ -38,6 +66,19 @@ class LinearSymNet(torch.nn.Module):
         return final_x
     
 class ConvSymNet(torch.nn.Module):
+    """
+    The Convlution SymNet Class
+    An experimental implementation of a convolution based SymNet
+
+    ...
+
+    Attributes
+    ----------
+    in_size : int
+        the number of input variables of SymNet. e.g. for up to 2nd order partial derivatives, in_size should be 6 for {u,ux,uy,uxx,uxy,uxy}
+    k : int
+        the number of layers of SymNet, which determines the maximum number of multiplication performed in the PDE
+    """
     def __init__(self, in_size,k, kernel_size):
         super(ConvSymNet, self).__init__()
         self.k = k

@@ -1,5 +1,37 @@
 import numbers
 
+def generate_equation(model):
+    """
+    Generates the equation of a given PDE-Net by algebraic explansion of the SymNet multi-layer perceptron.
+    Uses a combination of classes included in this file.
+
+    Parameters
+    ----------
+      model : PDE_NET
+          An instance of a trained PDE_NET model
+
+    """
+    params = list(model.parameters())
+    variables = model.gradient_generator.variables
+    base_terms = [Term(1,[var]) for var in variables]
+
+    for param in params[:-2]:
+        result0 = []
+        result1 = []
+        for i in range(len(param[0])):
+            result0.append(TermUtil.mult(param[0][i].item(), base_terms[i]))
+            result1.append(TermUtil.mult(param[1][i].item(), base_terms[i]))
+        col = TermUtil.mult(TermCollection.from_list(result0),TermCollection.from_list(result1))
+        base_terms.append(col)
+
+    coefs = params[-2]
+    result = []
+    for i in range(len(coefs[0])):
+        result.append(TermUtil.mult(coefs[0][i].item(), base_terms[i]))
+    result.append(Term(params[-1][0]))
+    final_col = TermCollection.from_list(result)
+    return final_col
+
 class Term:
     def __init__(self,coef,var = []):
         try: 
@@ -114,25 +146,3 @@ class TermUtil:
                 return TermUtil.mult_ll(a,b)
             else:
                 return TermUtil.mult(b,a)
-
-def generate_equation(model):
-    params = list(model.parameters())
-    variables = model.gradient_generator.variables
-    base_terms = [Term(1,[var]) for var in variables]
-
-    for param in params[:-2]:
-        result0 = []
-        result1 = []
-        for i in range(len(param[0])):
-            result0.append(TermUtil.mult(param[0][i].item(), base_terms[i]))
-            result1.append(TermUtil.mult(param[1][i].item(), base_terms[i]))
-        col = TermUtil.mult(TermCollection.from_list(result0),TermCollection.from_list(result1))
-        base_terms.append(col)
-
-    coefs = params[-2]
-    result = []
-    for i in range(len(coefs[0])):
-        result.append(TermUtil.mult(coefs[0][i].item(), base_terms[i]))
-    result.append(Term(params[-1][0]))
-    final_col = TermCollection.from_list(result)
-    return final_col

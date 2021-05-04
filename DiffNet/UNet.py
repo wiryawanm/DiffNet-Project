@@ -1,25 +1,20 @@
 import torch
 from torch.nn import Linear, Conv2d,ReLU,ConvTranspose2d
 
-class UNet_CNN(torch.nn.Module):
-    def __init__(self,k, layer_size = 32,in_channel = 1,kernel_size=3):
-        super(UNet_CNN, self).__init__()
-        padding = kernel_size//2
-        layers = [Conv2d(in_channel,layer_size,kernel_size,padding=padding)]
-        for i in range(k):
-          layers.append(Conv2d(layer_size,layer_size,kernel_size,padding=padding))
-        self.layers = torch.nn.ModuleList(layers)
-        self.relu = ReLU()
-
-    def forward(self,images):
-        output = images
-        for layer in self.layers[:-1]:
-            output = self.relu(layer(output))
-        output = self.layers[-1](output)
-        return output
-
-
 class UNet(torch.nn.Module):
+    """
+    The U-Net Class
+    A full U-Net implementation
+
+    ...
+
+    Attributes
+    ----------
+    k : int
+        number of CNN layers in each scale level of U-Net
+    layer_size : int
+        number of channels in the hidden CNN layers in the highest scale level of U-Net
+    """
     def __init__(self,k, layer_size = 32, dt = 0.1, scale_level = 2,kernel_size=3):
         super(UNet, self).__init__()
 
@@ -75,6 +70,36 @@ class UNet(torch.nn.Module):
           x = up_cnn(x)
         
         x = self.relu(images + self.final_conv(x))
-        # print(x.shape)
 
         return x
+
+
+class UNet_CNN(torch.nn.Module):
+    """
+    The U-Net CNN Class
+    A class which handles CNN layers in the U-Net implementation
+
+    ...
+
+    Attributes
+    ----------
+    k : int
+        number of CNN layers in each scale level of U-Net
+    layer_size : int
+        number of channels in the hidden CNN layers
+    """
+    def __init__(self,k, layer_size = 32,in_channel = 1,kernel_size=3):
+        super(UNet_CNN, self).__init__()
+        padding = kernel_size//2
+        layers = [Conv2d(in_channel,layer_size,kernel_size,padding=padding)]
+        for i in range(k):
+          layers.append(Conv2d(layer_size,layer_size,kernel_size,padding=padding))
+        self.layers = torch.nn.ModuleList(layers)
+        self.relu = ReLU()
+
+    def forward(self,images):
+        output = images
+        for layer in self.layers[:-1]:
+            output = self.relu(layer(output))
+        output = self.layers[-1](output)
+        return output
